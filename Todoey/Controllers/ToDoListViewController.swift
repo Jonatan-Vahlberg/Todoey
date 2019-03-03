@@ -8,31 +8,31 @@
 
 import UIKit
 
+
 class ToDoListViewController: UITableViewController {
 
     var itemArray = [ItemDataModel]()
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let item = ItemDataModel()
-        item.title = "Buy Doggos"
+        print(dataFilePath)
         
-        let item2 = ItemDataModel()
-        item2.title = "Sell Doggos"
+//        let item = ItemDataModel()
+//        item.title = "Buy Doggos"
+//
+//        let item2 = ItemDataModel()
+//        item2.title = "Sell Doggos"
+//
+//        let item3 = ItemDataModel()
+//        item3.title = "Regret"
+
+//        itemArray.append(item)
+//        itemArray.append(item2)
+//        itemArray.append(item3)
         
-        let item3 = ItemDataModel()
-        item3.title = "Regret"
-        
-        itemArray.append(item)
-        itemArray.append(item2)
-        itemArray.append(item3)
-        
-        if let items = defaults.array(forKey: "TODOListArray") as! [ItemDataModel]{
-            itemArray = items
-        }
-//        tableView.reloadData()
+        loadItems()
         
         
     }
@@ -52,17 +52,11 @@ class ToDoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        
-        //tableView.reloadData()
-        
-        
-        
-        
+
         tableView.cellForRow(at: indexPath)?.accessoryType = ((itemArray[indexPath.row].checked) ? .none : .checkmark)
         itemArray[indexPath.row].checked = !itemArray[indexPath.row].checked
-        
-        
+        saveItems()
+
     }
 
 
@@ -78,7 +72,7 @@ class ToDoListViewController: UITableViewController {
             item.title = textFeild.text!
             
             self.itemArray.append(item)
-            self.defaults.set(self.itemArray, forKey: "TODOListArray")
+            self.saveItems()
             self.tableView.reloadData()
         }
         alert.addTextField {(alertTextFeild) in
@@ -90,6 +84,30 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    func saveItems(){
+        
+        let encoder = PropertyListEncoder()
+        do{
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath! )
+        }
+        catch{
+            print("error in encoding")
+        }
+    }
+    
+    func loadItems(){
+        
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do{
+               itemArray = try decoder.decode([ItemDataModel].self, from: data)
+            }catch{
+                print("Error Decoding",error)
+            }
+            
+        }
+    }
     
 }
 
