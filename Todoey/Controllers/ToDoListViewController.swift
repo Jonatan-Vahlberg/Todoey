@@ -7,11 +7,12 @@
 //
 
 import UIKit
+import CoreData
 
 
 class ToDoListViewController: UITableViewController {
-
-    var itemArray = [ItemDataModel]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var itemArray = [Item]()
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
     override func viewDidLoad() {
@@ -19,18 +20,6 @@ class ToDoListViewController: UITableViewController {
         
         print(dataFilePath)
         
-//        let item = ItemDataModel()
-//        item.title = "Buy Doggos"
-//
-//        let item2 = ItemDataModel()
-//        item2.title = "Sell Doggos"
-//
-//        let item3 = ItemDataModel()
-//        item3.title = "Regret"
-
-//        itemArray.append(item)
-//        itemArray.append(item2)
-//        itemArray.append(item3)
         
         loadItems()
         
@@ -68,8 +57,12 @@ class ToDoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add new Todoey Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            let item = ItemDataModel()
+            
+            
+            
+            let item = Item(context: self.context)
             item.title = textFeild.text!
+            item.checked = false
             
             self.itemArray.append(item)
             self.saveItems()
@@ -86,28 +79,35 @@ class ToDoListViewController: UITableViewController {
     
     func saveItems(){
         
-        let encoder = PropertyListEncoder()
+        
         do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath! )
+            try context.save()
         }
         catch{
-            print("error in encoding")
+            print("Error Saving",error)
         }
     }
     
     func loadItems(){
         
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do{
-               itemArray = try decoder.decode([ItemDataModel].self, from: data)
-            }catch{
-                print("Error Decoding",error)
-            }
-            
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+            itemArray = try context.fetch(request)
         }
+        catch{
+            print("Error Fetching data")
+        }
+        
     }
+    
+    //deletes one item att index: Row
+    func deleteItem(row: Int){
+        
+        context.delete(itemArray[row])
+        itemArray.remove(at: row)
+        saveItems()
+    }
+    
     
 }
 

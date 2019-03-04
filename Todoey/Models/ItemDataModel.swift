@@ -8,10 +8,10 @@
 
 import Foundation
 
-class ItemDataModel : Codable{
+//class ItemDataModel : Codable{
     
-    var title: String = ""
-    var checked: Bool = false
+    //var title: String = ""
+    //var checked: Bool = false
     
     
-}
+//}
