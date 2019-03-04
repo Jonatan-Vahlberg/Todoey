@@ -7,12 +7,13 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
-    var categoryArray = [Category]()
+    let realm = try! Realm()
+    
+    var categoryArray : Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,39 +22,16 @@ class CategoryViewController: UITableViewController {
     }
     
     
-    @IBAction func addButtonPressed(_ sender: Any) {
-        var textFeild = UITextField()
-        
-        let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
-        let action = UIAlertAction(title: "Add Category", style: .default) { (alert) in
-            let category = Category(context: self.context)
-            category.name = textFeild.text!
-            
-            self.categoryArray.append(category)
-            self.saveCategories()
-            self.tableView.reloadData()
-        }
-        
-        alert.addTextField { (alertTextFeild) in
-            alertTextFeild.placeholder = "Type New Category"
-            textFeild = alertTextFeild
-        }
-        alert.addAction(action)
-        
-        present(alert, animated: true, completion: nil)
-        
-    }
-    
     //MARK: - TableView DataSource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell =  tableView.dequeueReusableCell(withIdentifier: "categoryCell")
         
-        cell?.textLabel?.text = categoryArray[indexPath.row].name
+        cell?.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
         
         return cell!
     }
@@ -68,27 +46,25 @@ class CategoryViewController: UITableViewController {
     
     //MARK: - Core Data Handeling
     
-    func saveCategories(){
+    func save(A category: Category){
         do{
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         }catch{
             print("Error Saving Data",error)
         }
         
     }
     
-    func loadCategories(with request: NSFetchRequest<Category> = Category.fetchRequest()){
-        do{
-            categoryArray = try context.fetch(request)
-        }catch{
-            print("Error Loading Categories",error)
-        }
+    func loadCategories(){
+        categoryArray = realm.objects(Category.self)
     }
     
     func deleteCategory(for row: Int){
-        context.delete(categoryArray[row])
-        categoryArray.remove(at: row)
-        saveCategories()
+//        context.delete(categoryArray[row])
+//        categoryArray.remove(at: row)
+//        saveCategories()
     }
     
     //MARK: - Segues
@@ -97,7 +73,33 @@ class CategoryViewController: UITableViewController {
         let destination = segue.destination as! ToDoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow {
-            destination.selectedCategory = categoryArray[indexPath.row]
+            destination.selectedCategory = categoryArray?[indexPath.row]
         }
+    }
+    
+    //MARK: - Add New Category
+    
+    @IBAction func addButtonPressed(_ sender: Any) {
+        var textFeild = UITextField()
+        
+        let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Add Category", style: .default) { (alert) in
+            let category = Category()
+            category.name = textFeild.text!
+            
+            
+            self.save(A: category)
+            self.tableView.reloadData()
+        }
+        
+        alert.addTextField { (alertTextFeild) in
+            alertTextFeild.placeholder = "Type New Category"
+            textFeild = alertTextFeild
+        }
+        alert.addAction(action)
+        
+        present(alert, animated: true, completion: nil)
+        
     }
 }

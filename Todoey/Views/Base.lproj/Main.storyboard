@@ -41,7 +41,7 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Items" largeTitleDisplayMode="never" id="EOv-zz-Wob">
-                        <barButtonItem key="rightBarButtonItem" style="plain" systemItem="add" id="JNf-pQ-z1R">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="JNf-pQ-z1R">
                             <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="u4D-EE-vSd" id="3tQ-d1-sNS"/>
