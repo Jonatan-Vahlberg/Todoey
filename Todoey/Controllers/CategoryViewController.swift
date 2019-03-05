@@ -8,8 +8,9 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
     
     let realm = try! Realm()
     
@@ -19,6 +20,8 @@ class CategoryViewController: UITableViewController {
         super.viewDidLoad()
         
         loadCategories()
+        tableView.rowHeight = 80
+        tableView.separatorStyle = .none
     }
     
     
@@ -29,11 +32,14 @@ class CategoryViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell =  tableView.dequeueReusableCell(withIdentifier: "categoryCell")
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        cell?.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
+        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
         
-        return cell!
+        cell.backgroundColor = UIColor(hexString: categoryArray?[indexPath.row].color ?? "ffffff")
+        cell.tintColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
+        cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
+        return cell
     }
     
     //MARK: - TableView Delegate Methods
@@ -44,7 +50,7 @@ class CategoryViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    //MARK: - Core Data Handeling
+    //MARK: - Data Handeling
     
     func save(A category: Category){
         do{
@@ -62,11 +68,26 @@ class CategoryViewController: UITableViewController {
     }
     
     func deleteCategory(for row: Int){
-//        context.delete(categoryArray[row])
-//        categoryArray.remove(at: row)
-//        saveCategories()
+        if let category = categoryArray?[row]{
+            do{
+                try realm.write {
+                    realm.delete(category)
+                    
+                }
+            }
+            catch{
+                print("Error Saving In Realm",error)
+            }
+            
+        }
+        
+        //tableView.reloadData()
     }
     
+    
+    override func updateModel(at indexPath: IndexPath) {
+        deleteCategory(for: indexPath.row)
+    }
     //MARK: - Segues
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -87,6 +108,7 @@ class CategoryViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Category", style: .default) { (alert) in
             let category = Category()
             category.name = textFeild.text!
+            category.color = UIColor.randomFlat.hexValue()
             
             
             self.save(A: category)
@@ -103,3 +125,6 @@ class CategoryViewController: UITableViewController {
         
     }
 }
+
+
+
